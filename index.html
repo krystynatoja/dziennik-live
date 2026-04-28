@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dziennik.live — Dziennik Ustaw RP</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#080A10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="dziennik.live">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+
+<!-- SEO / sharing -->
+<meta name="description" content="Dziennik Ustaw RP na żywo — z powiadomieniami i podsumowaniami AI w ludzkim języku.">
+<meta property="og:title" content="dziennik.live">
+<meta property="og:description" content="Dziennik Ustaw RP na żywo — dla każdego obywatela.">
+<meta property="og:type" content="website">
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080A10; --bg2: #0F1219; --bg3: #161B26;
+  --border: #1E2535; --border2: #252D3E;
+  --text: #E8EDF5; --text2: #8892A4; --text3: #5A6478;
+  --accent: #4558E8;
+  --red: #EF4444; --green: #22C55E;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; padding-bottom: 60px;
+}
+
+/* ── HEADER ── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,10,16,.96);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px 12px;
+  max-width: 860px; margin: 0 auto;
+}
+.header-top {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 14px;
+}
+.logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.logo-text { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+.logo-text span { color: var(--green); font-family: 'Courier New', monospace; font-size: 16px; font-weight: 500; }
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2);
+  border-radius: 99px; padding: 4px 10px;
+}
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+.live-text { font-size: 10px; font-weight: 600; color: var(--green); letter-spacing: .5px; }
+
+/* ── YEAR TABS ── */
+.year-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.year-tab {
+  padding: 5px 14px; border-radius: 99px; font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border2); color: var(--text2);
+  background: transparent; cursor: pointer; transition: all .15s;
+  font-family: 'Outfit', sans-serif;
+}
+.year-tab.active { background: rgba(69,88,232,.15); border-color: var(--accent); color: var(--accent); }
+.year-tab:hover:not(.active) { border-color: var(--border2); color: var(--text); }
+
+/* ── SEARCH ── */
+.search-wrap { position: relative; }
+.search-wrap input {
+  width: 100%; padding: 10px 16px 10px 38px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 12px; font-size: 14px; color: var(--text);
+  font-family: 'Outfit', sans-serif; outline: none; transition: border-color .15s;
+}
+.search-wrap input:focus { border-color: var(--accent); }
+.search-wrap input::placeholder { color: var(--text3); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
+
+/* ── CONTENT ── */
+.content { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+
+/* ── STATS ── */
+.stats-bar {
+  max-width: 860px; margin: 0 auto;
+  padding: 8px 20px; font-size: 11px; color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.stats-count { color: var(--text2); font-weight: 600; }
+
+/* ── SEPARATOR ── */
+.sep {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 0 8px; color: var(--text3); font-size: 10px;
+  font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+}
+.sep-line { flex: 1; height: 1px; background: var(--border); }
+
+/* ── KARTA AKTU ── */
+.akt {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; margin-bottom: 8px; overflow: hidden;
+  cursor: pointer; position: relative; transition: border-color .15s;
+}
+.akt:hover { border-color: var(--border2); }
+.akt-stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+.akt-inner { padding: 12px 14px 10px 18px; }
+.akt-badges { display: flex; gap: 5px; margin-bottom: 7px; flex-wrap: wrap; }
+.badge {
+  padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600;
+  background: var(--bg3); color: var(--text2); border: 1px solid var(--border2);
+}
+.badge-key {
+  padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600;
+  background: rgba(239,68,68,.08); color: var(--red); border: 1px solid rgba(239,68,68,.2);
+}
+.akt-title { font-size: 13px; font-weight: 600; line-height: 1.45; color: var(--text); margin-bottom: 8px; }
+.akt-meta { display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: var(--text3); }
+.akt-pos { font-weight: 600; color: var(--text2); }
+
+/* ── PODSUMOWANIE ── */
+.akt-summary { display: none; border-top: 1px solid var(--border); padding: 10px 14px 10px 18px; }
+.akt-summary.open { display: block; }
+.summary-loading { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text3); padding: 4px 0; }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.summary-bullets { list-style: none; display: flex; flex-direction: column; }
+.summary-bullet {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px; color: var(--text2); line-height: 1.5;
+}
+.summary-bullet:last-child { border-bottom: none; }
+.bullet-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 5px; }
+.summary-bullet strong { color: var(--text); font-weight: 600; }
+.summary-error { font-size: 11px; color: var(--text3); padding: 4px 0; font-style: italic; }
+.summary-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+
+/* ── GŁOSOWANIA ── */
+.votes-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.votes-totals {
+  display: flex; gap: 6px; margin-bottom: 10px;
+}
+.votes-total {
+  flex: 1; padding: 8px 10px; border-radius: 8px;
+  background: var(--bg3); display: flex; flex-direction: column; gap: 2px;
+}
+.votes-total-label { font-size: 9px; font-weight: 600; color: var(--text3); letter-spacing: .5px; text-transform: uppercase; }
+.votes-total-value { font-size: 18px; font-weight: 700; }
+.votes-total.za .votes-total-value { color: var(--green); }
+.votes-total.przeciw .votes-total-value { color: var(--red); }
+.votes-total.wstrzymal .votes-total-value { color: #EAB308; }
+
+.klub-list { display: flex; flex-direction: column; gap: 6px; }
+.klub-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 9px 12px; cursor: pointer;
+  transition: border-color .15s;
+}
+.klub-card:hover { border-color: var(--border2); }
+.klub-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.klub-name { display: flex; align-items: center; gap: 8px; }
+.klub-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.klub-name-text { font-size: 12px; font-weight: 600; color: var(--text); }
+.klub-numbers { display: flex; gap: 8px; font-size: 11px; font-weight: 600; }
+.klub-num-za { color: var(--green); }
+.klub-num-przeciw { color: var(--red); }
+.klub-num-wstrzymal { color: #EAB308; }
+
+.klub-mps { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.klub-card.open .klub-mps { display: block; }
+.klub-mps-group { margin-bottom: 8px; }
+.klub-mps-group:last-child { margin-bottom: 0; }
+.klub-mps-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 4px;
+}
+.klub-mps-list { font-size: 11px; color: var(--text2); line-height: 1.5; }
+.klub-mps-list .mp { display: inline; }
+.klub-mps-list .mp:not(:last-child)::after { content: ', '; }
+
+.votes-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; color: var(--text3); margin-top: 8px;
+  padding-top: 8px; border-top: 1px solid var(--border);
+}
+.votes-not-found { font-size: 11px; color: var(--text3); padding: 4px 0; font-style: italic; }
+
+/* ── PAGINACJA ── */
+.load-more {
+  display: block; margin: 12px auto 0;
+  padding: 11px 28px; background: var(--bg2);
+  border: 1px solid var(--border2); border-radius: 10px;
+  font-size: 13px; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all .15s; font-family: 'Outfit', sans-serif;
+}
+.load-more:hover { border-color: var(--accent); color: var(--accent); }
+.load-more:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── EMPTY / ERROR ── */
+.state-msg {
+  text-align: center; padding: 60px 20px;
+  font-size: 14px; color: var(--text3); line-height: 1.7;
+}
+.state-msg strong { color: var(--text2); display: block; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <svg width="32" height="32" viewBox="0 0 72 72" fill="none">
+        <rect width="72" height="72" rx="18" fill="#4558E8"/>
+        <text x="36" y="54" font-size="52" fill="white" text-anchor="middle" font-family="Georgia, serif" font-weight="700">D</text>
+        <circle cx="60" cy="14" r="6" fill="#22C55E"/>
+        <circle cx="60" cy="14" r="6" fill="#22C55E" opacity="0.35">
+          <animate attributeName="r" values="6;11;6" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.35;0;0.35" dur="2s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+      <div class="logo-text">dziennik<span>.live</span></div>
+    </div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <div class="live-text">NA ŻYWO</div>
+    </div>
+  </div>
+
+  <div class="year-tabs" id="yearTabs">
+    <button class="year-tab active" onclick="setYear(2025, this)">2025</button>
+    <button class="year-tab" onclick="setYear(2024, this)">2024</button>
+    <button class="year-tab" onclick="setYear(2023, this)">2023</button>
+    <button class="year-tab" onclick="setYear(2022, this)">2022</button>
+    <button class="year-tab" onclick="setYear(2021, this)">2021</button>
+    <button class="year-tab" onclick="setYear(2020, this)">2020</button>
+    <button class="year-tab" onclick="setYear(2019, this)">2019</button>
+    <button class="year-tab" onclick="setYear(2018, this)">2018</button>
+  </div>
+
+  <div class="search-wrap">
+    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="searchInput" placeholder="Znajdź akt prawny…" oninput="filterActs()">
+  </div>
+</div>
+
+<div class="stats-bar">
+  <span id="statsText" class="stats-count">Ładowanie…</span>
+  <span id="statsYear" style="font-size:10px;color:var(--text3)"></span>
+</div>
+
+<div class="content">
+  <div id="actsList"></div>
+  <button class="load-more" id="loadMoreBtn" onclick="loadMore()" style="display:none">Załaduj więcej</button>
+</div>
+
+<script>
+const S = {
+  year: 2025, offset: 0, limit: 20,
+  total: 0, acts: [], apiKey: null,
+  summaries: {}, lastPos: null,
+};
+
+async function init() {
+  S.offset = 0; S.acts = []; S.lastPos = null;
+  document.getElementById('actsList').innerHTML = '';
+  document.getElementById('loadMoreBtn').style.display = 'none';
+  document.getElementById('statsText').textContent = 'Ładowanie…';
+  document.getElementById('statsYear').textContent = `Dz.U. ${S.year}`;
+  await loadMore();
+}
+
+async function loadMore() {
+  const btn = document.getElementById('loadMoreBtn');
+  btn.disabled = true;
+  btn.textContent = 'Ładowanie…';
+
+  try {
+    const url = `https://api.sejm.gov.pl/eli/acts/DU/${S.year}?limit=${S.limit}&offset=${S.offset}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    S.total = data.totalCount || 0;
+    const items = data.items || [];
+    S.acts = S.acts.concat(items);
+    S.offset += items.length;
+
+    renderActs(items);
+    updateStats();
+
+    if (S.offset < S.total) {
+      btn.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = `Załaduj więcej — ${S.total - S.offset} pozostało`;
+    } else {
+      btn.style.display = 'none';
+    }
+  } catch (e) {
+    document.getElementById('actsList').innerHTML =
+      `<div class="state-msg"><strong>Błąd ładowania</strong>Sprawdź połączenie z internetem i odśwież stronę.</div>`;
+    btn.style.display = 'none';
+  }
+}
+
+function renderActs(items) {
+  const list = document.getElementById('actsList');
+
+  items.forEach(act => {
+    const pos = act.pos || act.position || '';
+
+    // Separator
+    const sep = document.createElement('div');
+    sep.className = 'sep';
+    sep.innerHTML = `<div class="sep-line"></div><span>Dz.U. ${S.year} poz. ${pos}</span><div class="sep-line"></div>`;
+    list.appendChild(sep);
+
+    // Karta
+    const card = document.createElement('div');
+    card.className = 'akt';
+    const title = act.title || act.name || 'Brak tytułu';
+    const date = act.announcementDate || act.date || '';
+    const type = act.type || 'Akt';
+    const isKey = /podatk|kodeks|budżet|konstytucj/i.test(title);
+
+    card.innerHTML = `
+      <div class="akt-stripe"></div>
+      <div class="akt-inner">
+        <div class="akt-badges">
+          <span class="badge">${esc(type)}</span>
+          ${isKey ? '<span class="badge-key">↑ Kluczowy</span>' : ''}
+        </div>
+        <div class="akt-title">${esc(title)}</div>
+        <div class="akt-meta">
+          <span class="akt-pos">Dz.U. ${S.year} poz. ${pos}</span>
+          <span>${fmtDate(date)}</span>
+        </div>
+      </div>
+      <div class="akt-summary" id="s-${S.year}-${pos}">
+        <div class="summary-label">Podsumowanie AI</div>
+        <div class="summary-loading"><div class="spinner"></div> Generowanie…</div>
+      </div>`;
+
+    card.addEventListener('click', () => toggleSummary(card, act));
+    list.appendChild(card);
+  });
+}
+
+async function toggleSummary(card, act) {
+  const pos = act.pos || act.position || '';
+  const el = card.querySelector('.akt-summary');
+  if (el.classList.toggle('open') === false) return;
+
+  const key = `${S.year}-${pos}`;
+  if (S.summaries[key]) {
+    renderBullets(el, S.summaries[key]);
+    loadVotes(card, act, key);
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: act.title || act.name || '',
+        type: act.type || '',
+        date: act.announcementDate || '',
+        year: S.year, pos,
+      }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    S.summaries[key] = data.bullets || [];
+    renderBullets(el, S.summaries[key]);
+    loadVotes(card, act, key);
+  } catch (e) {
+    el.innerHTML = `<div class="summary-label">Podsumowanie AI</div><div class="summary-error">Nie udało się wygenerować podsumowania.</div>`;
+    loadVotes(card, act, key);
+  }
+}
+
+// ── GŁOSOWANIA POSŁÓW ──
+async function loadVotes(card, act, key) {
+  // Tylko ustawy mają głosowania w Sejmie
+  const type = (act.type || '').toLowerCase();
+  if (!type.includes('ustawa')) return;
+
+  // Sprawdź czy już mamy
+  if (S.votes && S.votes[key]) {
+    renderVotes(card, S.votes[key]);
+    return;
+  }
+  if (!S.votes) S.votes = {};
+
+  const el = card.querySelector('.akt-summary');
+  // Dodaj placeholder
+  let votesEl = card.querySelector('.votes-section');
+  if (!votesEl) {
+    votesEl = document.createElement('div');
+    votesEl.className = 'votes-section';
+    votesEl.innerHTML = `<div class="summary-label">Głosowanie w Sejmie</div><div class="summary-loading"><div class="spinner"></div> Wyszukiwanie głosowania…</div>`;
+    el.appendChild(votesEl);
+  }
+
+  try {
+    const res = await fetch('/api/votes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: act.title || act.name || '',
+        date: act.announcementDate || '',
+      }),
+    });
+    const data = await res.json();
+    S.votes[key] = data;
+    renderVotes(card, data);
+  } catch (e) {
+    votesEl.innerHTML = `<div class="summary-label">Głosowanie w Sejmie</div><div class="votes-not-found">Nie udało się pobrać głosowania.</div>`;
+  }
+}
+
+function renderVotes(card, data) {
+  let votesEl = card.querySelector('.votes-section');
+  if (!votesEl) {
+    votesEl = document.createElement('div');
+    votesEl.className = 'votes-section';
+    card.querySelector('.akt-summary').appendChild(votesEl);
+  }
+
+  if (!data.found) {
+    votesEl.innerHTML = `<div class="summary-label">Głosowanie w Sejmie</div><div class="votes-not-found">Nie znaleziono głosowania powiązanego z tym aktem.</div>`;
+    return;
+  }
+
+  const t = data.totals;
+  const klubsHtml = data.klubs.map((k, i) => `
+    <div class="klub-card" onclick="event.stopPropagation(); this.classList.toggle('open')">
+      <div class="klub-card-top">
+        <div class="klub-name">
+          <div class="klub-dot" style="background:${k.color}"></div>
+          <div class="klub-name-text">${esc(k.name)}</div>
+        </div>
+        <div class="klub-numbers">
+          <span class="klub-num-za">${k.za.length}</span>
+          <span class="klub-num-przeciw">${k.przeciw.length}</span>
+          <span class="klub-num-wstrzymal">${k.wstrzymal.length}</span>
+        </div>
+      </div>
+      <div class="klub-mps">
+        ${k.za.length ? `<div class="klub-mps-group"><div class="klub-mps-label">Za (${k.za.length})</div><div class="klub-mps-list">${k.za.map(m => `<span class="mp">${esc(m.name)}</span>`).join('')}</div></div>` : ''}
+        ${k.przeciw.length ? `<div class="klub-mps-group"><div class="klub-mps-label">Przeciw (${k.przeciw.length})</div><div class="klub-mps-list">${k.przeciw.map(m => `<span class="mp">${esc(m.name)}</span>`).join('')}</div></div>` : ''}
+        ${k.wstrzymal.length ? `<div class="klub-mps-group"><div class="klub-mps-label">Wstrzymało (${k.wstrzymal.length})</div><div class="klub-mps-list">${k.wstrzymal.map(m => `<span class="mp">${esc(m.name)}</span>`).join('')}</div></div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  votesEl.innerHTML = `
+    <div class="summary-label">Głosowanie w Sejmie</div>
+    <div class="votes-totals">
+      <div class="votes-total za"><div class="votes-total-label">Za</div><div class="votes-total-value">${t.za}</div></div>
+      <div class="votes-total przeciw"><div class="votes-total-label">Przeciw</div><div class="votes-total-value">${t.przeciw}</div></div>
+      <div class="votes-total wstrzymal"><div class="votes-total-label">Wstrzymało</div><div class="votes-total-value">${t.wstrzymal}</div></div>
+    </div>
+    <div class="klub-list">${klubsHtml}</div>
+    <div class="votes-meta">
+      <span>${esc(data.title || '')}</span>
+      <span>${fmtDate(data.date)}</span>
+    </div>
+  `;
+}
+
+function renderBullets(el, bullets) {
+  el.innerHTML = `<div class="summary-label">Podsumowanie AI</div><ul class="summary-bullets">${
+    bullets.map(b => `<li class="summary-bullet"><div class="bullet-dot"></div><span>${esc(b)}</span></li>`).join('')
+  }</ul>`;
+}
+
+function setYear(year, btn) {
+  S.year = year;
+  document.querySelectorAll('.year-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('searchInput').value = '';
+  init();
+}
+
+function filterActs() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  let visible = 0;
+  document.querySelectorAll('.akt').forEach(card => {
+    const title = card.querySelector('.akt-title')?.textContent.toLowerCase() || '';
+    const hide = q && !title.includes(q);
+    card.hidden = hide;
+    if (!hide) visible++;
+  });
+  document.querySelectorAll('.sep').forEach(s => s.hidden = !!q);
+  document.getElementById('statsText').textContent =
+    q ? `${visible} wyników dla "${q}"` : `${S.acts.length} z ${S.total} aktów`;
+}
+
+function updateStats() {
+  document.getElementById('statsText').textContent = `${S.acts.length} z ${S.total} aktów`;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtDate(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  catch { return d; }
+}
+
+init();
+
+// ── PWA: Register service worker ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW failed:', err));
+  });
+}
+
+// ── PWA: Install prompt ──
+let deferredPrompt = null;
+const installBtn = document.createElement('button');
+installBtn.textContent = '↓ Zainstaluj aplikację';
+installBtn.style.cssText = `
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  padding: 12px 24px; background: #4558E8; color: white;
+  border: none; border-radius: 99px; font-size: 14px; font-weight: 600;
+  font-family: 'Outfit', sans-serif; cursor: pointer; z-index: 999;
+  box-shadow: 0 10px 30px rgba(69,88,232,.4); display: none;
+`;
+document.body.appendChild(installBtn);
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block';
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+  installBtn.style.display = 'none';
+  deferredPrompt = null;
+});
+</script>
+</body>
+</html>
